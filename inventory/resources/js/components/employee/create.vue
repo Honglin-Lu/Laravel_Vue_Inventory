@@ -1,7 +1,7 @@
 <template>
   <div>
     <div class="row">
-        <router-link to="" class="btn btn-primary">All Employee</router-link>
+        <router-link to="/employee" class="btn btn-primary">All Employee</router-link>
     </div>
     <div class="row justify-content-center">
       <div class="col-xl-12 col-lg-12 col-md-12">
@@ -106,14 +106,14 @@
                     <div class="form-group">
                       <div class="form-row">
                           <div class="col-md-6">
-                            <input type="file" class="custom-file-input" id="customFile">
+                            <input type="file" class="custom-file-input" id="customFile" @change="onFileSelected">
                             <small class="text-danger" v-if="errors.photo">{{ errors.photo[0] }}</small>
 
                             <label class="custom-file-label" for="customFile">Choose file</label>
 
                           </div>
                           <div class="col-md-6">
-                              <img src="form.photo" style="height: 40px; width: 40px;">
+                              <img :src="form.photo" style="height: 40px; width: 40px;">
                           </div>
                       </div>
                     </div>
@@ -142,7 +142,7 @@
 <script>
   export default {
     created() {
-      console.log(User.loggedIn())
+      //console.log(User.loggedIn())
       if (!User.loggedIn()){
         this.$router.push({ name: '/' })
       }
@@ -164,9 +164,27 @@
     },
     
     methods:{
-        employeeInsert(){
+        onFileSelected(event){
+          let file = event.target.files[0];
+          if (file.size > 1048770){
+            Notification.image_validation()
+          }else{
+            let reader = new FileReader();
+            reader.onload = event => {
+              this.form.photo = event.target.result
+              console.log(event.target.result);
+            };
+            reader.readAsDataURL(file);
+          }
+        },
+        employeeInsert(){//console.log(this.form)
+          axios.post('/api/employee',this.form).then(() => {
+            this.$router.push({ name: 'employee' })
+            Notification.success()
+          })
+          .catch(error => this.errors = error.response.data.errors)
 
-        }
+        },
     }
   }
 </script>
