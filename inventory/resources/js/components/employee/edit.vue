@@ -1,7 +1,7 @@
 <template>
   <div>
     <div class="row">
-        <router-link to="/employee" class="btn btn-primary">Employee Update</router-link>
+        <router-link to="/employee" class="btn btn-primary">All Employee</router-link>
     </div>
     <div class="row justify-content-center">
       <div class="col-xl-12 col-lg-12 col-md-12">
@@ -11,7 +11,7 @@
               <div class="col-lg-12">
                 <div class="login-form">
                   <div class="text-center">
-                    <h1 class="h4 text-gray-900 mb-4">Add Employee</h1>
+                    <h1 class="h4 text-gray-900 mb-4">Employee Update</h1>
                   </div>
                   <form class="user" @submit.prevent="employeeUpdate" enctype="multipart/form-data">
                     <div class="form-group">
