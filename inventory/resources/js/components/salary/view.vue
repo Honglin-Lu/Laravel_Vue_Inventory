@@ -1,7 +1,7 @@
 <template>
   <div>
     <div class="row">
-        <router-link to="/given-salary" class="btn btn-primary">Pay Salary</router-link>
+        <router-link to="/salary" class="btn btn-primary">Go Bacck</router-link>
     </div>
     <br>
       <input type="text" v-model="searchTerm" class="form-control" style="width: 300px;" placeholder="Search Here">
@@ -11,23 +11,27 @@
               <!-- Simple Tables -->
               <div class="card">
                 <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
-                  <h6 class="m-0 font-weight-bold text-primary">All Salary Details</h6>
+                  <h6 class="m-0 font-weight-bold text-primary">Employee Salary Details</h6>
                 </div>
                 <div class="table-responsive">
                   <table class="table align-items-center table-flush">
                     <thead class="thead-light">
                       <tr>
-                        <th>Month Name</th>
-                        <th>Details</th>
-                     
+                        <th>Name</th>
+                        <th>Month</th>
+                        <th>Amount</th>
+                        <th>Date</th>
+                        <th>Action</th>
                       </tr>
                     </thead>
                     <tbody>
                       <tr v-for="salary in filtersearch" :key="salary.id">
+                        <td>{{ salary.name }}</td>
                         <td>{{ salary.salary_month }}</td>
-                     
+                        <td>{{ salary.amount }}</td>
+                        <td>{{ salary.salary_date }}</td>
                         <td>
-                          <router-link :to="{name: 'view-salary', params:{id:salary.salary_month}}" class="btn btn-sm btn-primary">View Salary</router-link>
+                          <router-link :to="{name: 'edit-salary', params:{id:salary.id}}" class="btn btn-sm btn-primary">Edit Salary</router-link>
                         </td>
                       </tr>
                       
@@ -59,21 +63,22 @@
     computed: {
       filtersearch(){
         return this.salaries.filter(salary => {
-          return salary.salary_month.match(this.searchTerm)
+          return salary.name.match(this.searchTerm)
         })
       }
     },
     
     methods:{
-      allSalary(){
-        axios.get('/api/salary/')
-        .then(({data}) => (this.salaries = data))
-        .catch()
+      viewSalary(){
+        let id = this.$route.params.id
+          axios.get('/api/salary/view/'+ id)
+          .then(({data}) => (this.salaries = data))
+          .catch(error => this.errors = error.response.data.errors)
       },
 
     },
     created() {
-        this.allSalary();
+        this.viewSalary();
       }
   }
 </script>

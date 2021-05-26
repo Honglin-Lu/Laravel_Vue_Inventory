@@ -120,7 +120,7 @@
         <div id="collapseBootstrap5" class="collapse" aria-labelledby="headingBootstrap" data-parent="#accordionSidebar">
           <div class="bg-white py-2 collapse-inner rounded">
             <router-link class="collapse-item" to="/given-salary">Add Salary</router-link>
-            <router-link class="collapse-item" to="/">All Salary</router-link>
+            <router-link class="collapse-item" to="/salary">All Salary</router-link>
           </div>
         </div>
       </li>
@@ -128,10 +128,10 @@
 
 
       <li class="nav-item">
-        <a class="nav-link" href="forms.html">
+        <router-link class="nav-link" to="/stock">
           <i class="fab fa-fw fa-wpforms"></i>
-          <span>Forms</span>
-        </a>
+          <span>Stock</span>
+        </router-link>
       </li>
       <li class="nav-item">
         <a class="nav-link collapsed" href="#" data-toggle="collapse" data-target="#collapseTable" aria-expanded="true"
@@ -385,7 +385,9 @@
           <footer class="sticky-footer bg-white">
         <div class="container my-auto">
           <div class="copyright text-center my-auto">
-            <span>copyright &copy; <script> document.write(new Date().getFullYear()); </script> - developed by
+            <span>copyright &copy;
+            {{date("Y")}} 
+            - developed by
               <b><a href="http://honglin.tech" target="_blank">Honglin_Learning</a></b>
             </span>
           </div>
