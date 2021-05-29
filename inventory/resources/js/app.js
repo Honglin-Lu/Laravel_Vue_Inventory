@@ -34,7 +34,7 @@ const Toast = Swal.mixin({
 
 window.Toast = Toast;
 
-
+window.Reload = new Vue();
 //sweet alert end
 
 
