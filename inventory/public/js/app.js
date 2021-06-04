@@ -4594,11 +4594,16 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
   this.allCategory();
   this.allCustomer();
   this.cartProduct();
+  this.vat();
   Reload.$on('AfterAdd', function () {
     _this.cartProduct();
   });
 }), _defineProperty(_created$created$data, "data", function data() {
   return {
+    customer_id: '',
+    pay: '',
+    due: '',
+    payby: '',
     products: [],
     categories: [],
     getproducts: [],
@@ -4606,7 +4611,8 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
     getsearchTerm: '',
     customers: [],
     errors: '',
-    carts: []
+    carts: [],
+    vats: ''
   };
 }), _defineProperty(_created$created$data, "computed", {
   filtersearch: function filtersearch() {
@@ -4622,6 +4628,24 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
     return this.getproducts.filter(function (getproduct) {
       return getproduct.product_name.match(_this3.getsearchTerm);
     });
+  },
+  qty: function qty() {
+    var sum = 0;
+
+    for (var i = 0; i < this.carts.length; i++) {
+      sum += parseFloat(this.carts[i].pro_quantity);
+    }
+
+    return sum;
+  },
+  subtotal: function subtotal() {
+    var sum = 0;
+
+    for (var i = 0; i < this.carts.length; i++) {
+      sum += parseFloat(this.carts[i].pro_quantity) * parseFloat(this.carts[i].product_price);
+    }
+
+    return sum;
   }
 }), _defineProperty(_created$created$data, "methods", {
   // Cart Methods Here
@@ -4657,37 +4681,67 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
       Notification.success();
     })["catch"]();
   },
-  // End Cart Methods
-  allProduct: function allProduct() {
+  vat: function vat() {
     var _this5 = this;
 
-    axios.get('/api/product/').then(function (_ref2) {
+    axios.get('/api/vats/').then(function (_ref2) {
       var data = _ref2.data;
-      return _this5.products = data;
+      return _this5.vats = data;
+    })["catch"]();
+  },
+  orderdone: function orderdone() {
+    var _this6 = this;
+
+    var total = this.subtotal * this.vats.vat / 100 + this.subtotal;
+    var data = {
+      qty: this.qty,
+      subtotal: this.subtotal,
+      customer_id: this.customer_id,
+      payby: this.payby,
+      pay: this.pay,
+      due: this.due,
+      vat: this.vats.vat,
+      total: total
+    };
+    axios.post('/api/orderdone', data).then(function () {
+      Notification.success();
+
+      _this6.$router.push({
+        name: 'home'
+      });
+    });
+  },
+  // End Cart Methods
+  allProduct: function allProduct() {
+    var _this7 = this;
+
+    axios.get('/api/product/').then(function (_ref3) {
+      var data = _ref3.data;
+      return _this7.products = data;
     })["catch"]();
   },
   allCategory: function allCategory() {
-    var _this6 = this;
+    var _this8 = this;
 
-    axios.get('/api/category/').then(function (_ref3) {
-      var data = _ref3.data;
-      return _this6.categories = data;
+    axios.get('/api/category/').then(function (_ref4) {
+      var data = _ref4.data;
+      return _this8.categories = data;
     })["catch"]();
   },
   allCustomer: function allCustomer() {
-    var _this7 = this;
+    var _this9 = this;
 
-    axios.get('/api/customer/').then(function (_ref4) {
-      var data = _ref4.data;
-      return _this7.customers = data;
+    axios.get('/api/customer/').then(function (_ref5) {
+      var data = _ref5.data;
+      return _this9.customers = data;
     })["catch"](console.log("error"));
   },
   subproduct: function subproduct(id) {
-    var _this8 = this;
+    var _this10 = this;
 
-    axios.get('/api/getting/product/' + id).then(function (_ref5) {
-      var data = _ref5.data;
-      return _this8.getproducts = data;
+    axios.get('/api/getting/product/' + id).then(function (_ref6) {
+      var data = _ref6.data;
+      return _this10.getproducts = data;
     })["catch"]();
   }
 }), _created$created$data);
@@ -56559,160 +56613,230 @@ var render = function() {
               ),
               _vm._v(" "),
               _c("div", { staticClass: "card-footer" }, [
-                _vm._m(2),
-                _vm._v(" "),
-                _c("br"),
-                _vm._v(" "),
-                _c("form", [
-                  _c("label", [_vm._v("Customer Name")]),
-                  _vm._v(" "),
+                _c("ul", { staticClass: "list-group" }, [
                   _c(
-                    "select",
+                    "li",
                     {
-                      directives: [
-                        {
-                          name: "model",
-                          rawName: "v-model",
-                          value: _vm.customer_id,
-                          expression: "customer_id"
-                        }
-                      ],
-                      staticClass: "form-control",
-                      on: {
-                        change: function($event) {
-                          var $$selectedVal = Array.prototype.filter
-                            .call($event.target.options, function(o) {
-                              return o.selected
-                            })
-                            .map(function(o) {
-                              var val = "_value" in o ? o._value : o.value
-                              return val
-                            })
-                          _vm.customer_id = $event.target.multiple
-                            ? $$selectedVal
-                            : $$selectedVal[0]
-                        }
-                      }
-                    },
-                    _vm._l(_vm.customers, function(customer) {
-                      return _c("option", { key: customer.id }, [
-                        _vm._v(_vm._s(customer.name))
-                      ])
-                    }),
-                    0
-                  ),
-                  _vm._v(" "),
-                  _c("label", [_vm._v("Pay")]),
-                  _vm._v(" "),
-                  _c("input", {
-                    directives: [
-                      {
-                        name: "model",
-                        rawName: "v-model",
-                        value: _vm.pay,
-                        expression: "pay"
-                      }
-                    ],
-                    staticClass: "form-control",
-                    attrs: { type: "text", required: "" },
-                    domProps: { value: _vm.pay },
-                    on: {
-                      input: function($event) {
-                        if ($event.target.composing) {
-                          return
-                        }
-                        _vm.pay = $event.target.value
-                      }
-                    }
-                  }),
-                  _vm._v(" "),
-                  _c("label", [_vm._v("Due")]),
-                  _vm._v(" "),
-                  _c("input", {
-                    directives: [
-                      {
-                        name: "model",
-                        rawName: "v-model",
-                        value: _vm.due,
-                        expression: "due"
-                      }
-                    ],
-                    staticClass: "form-control",
-                    attrs: { type: "text", required: "" },
-                    domProps: { value: _vm.due },
-                    on: {
-                      input: function($event) {
-                        if ($event.target.composing) {
-                          return
-                        }
-                        _vm.due = $event.target.value
-                      }
-                    }
-                  }),
-                  _vm._v(" "),
-                  _c("label", [_vm._v("Pay By")]),
-                  _vm._v(" "),
-                  _c(
-                    "select",
-                    {
-                      directives: [
-                        {
-                          name: "model",
-                          rawName: "v-model",
-                          value: _vm.customer_id,
-                          expression: "customer_id"
-                        }
-                      ],
-                      staticClass: "form-control",
-                      on: {
-                        change: function($event) {
-                          var $$selectedVal = Array.prototype.filter
-                            .call($event.target.options, function(o) {
-                              return o.selected
-                            })
-                            .map(function(o) {
-                              var val = "_value" in o ? o._value : o.value
-                              return val
-                            })
-                          _vm.customer_id = $event.target.multiple
-                            ? $$selectedVal
-                            : $$selectedVal[0]
-                        }
-                      }
+                      staticClass:
+                        "list-group-item d-flex justify-content-between align-items-center"
                     },
                     [
-                      _c("option", { attrs: { value: "HandCash" } }, [
-                        _vm._v("Hand Cash")
-                      ]),
-                      _vm._v(" "),
-                      _c("option", { attrs: { value: "Cheque" } }, [
-                        _vm._v("Cheque")
-                      ]),
-                      _vm._v(" "),
-                      _c("option", { attrs: { value: "GiftCard" } }, [
-                        _vm._v("Gift Card")
-                      ])
+                      _vm._v("\n                            Total Quantity:"),
+                      _c("strong", [_vm._v(_vm._s(_vm.qty))])
                     ]
                   ),
                   _vm._v(" "),
-                  _c("br"),
+                  _c(
+                    "li",
+                    {
+                      staticClass:
+                        "list-group-item d-flex justify-content-between align-items-center"
+                    },
+                    [
+                      _vm._v("\n                            Sub Total:"),
+                      _c("strong", [_vm._v(_vm._s(_vm.subtotal) + " $")])
+                    ]
+                  ),
                   _vm._v(" "),
                   _c(
-                    "button",
+                    "li",
                     {
-                      staticClass: "btn btn-success",
-                      attrs: { type: "submit" }
+                      staticClass:
+                        "list-group-item d-flex justify-content-between align-items-center"
                     },
-                    [_vm._v("Submit")]
+                    [
+                      _vm._v("\n                            Vat:"),
+                      _c("strong", [_vm._v(_vm._s(_vm.vats.vat) + " %")])
+                    ]
+                  ),
+                  _vm._v(" "),
+                  _c(
+                    "li",
+                    {
+                      staticClass:
+                        "list-group-item d-flex justify-content-between align-items-center"
+                    },
+                    [
+                      _vm._v("\n                            Total:"),
+                      _c("strong", [
+                        _vm._v(
+                          _vm._s(
+                            (_vm.subtotal * _vm.vats.vat) / 100 + _vm.subtotal
+                          ) + " $"
+                        )
+                      ])
+                    ]
                   )
-                ])
+                ]),
+                _vm._v(" "),
+                _c("br"),
+                _vm._v(" "),
+                _c(
+                  "form",
+                  {
+                    on: {
+                      submit: function($event) {
+                        $event.preventDefault()
+                        return _vm.orderdone($event)
+                      }
+                    }
+                  },
+                  [
+                    _c("label", [_vm._v("Customer Name")]),
+                    _vm._v(" "),
+                    _c(
+                      "select",
+                      {
+                        directives: [
+                          {
+                            name: "model",
+                            rawName: "v-model",
+                            value: _vm.customer_id,
+                            expression: "customer_id"
+                          }
+                        ],
+                        staticClass: "form-control",
+                        on: {
+                          change: function($event) {
+                            var $$selectedVal = Array.prototype.filter
+                              .call($event.target.options, function(o) {
+                                return o.selected
+                              })
+                              .map(function(o) {
+                                var val = "_value" in o ? o._value : o.value
+                                return val
+                              })
+                            _vm.customer_id = $event.target.multiple
+                              ? $$selectedVal
+                              : $$selectedVal[0]
+                          }
+                        }
+                      },
+                      _vm._l(_vm.customers, function(customer) {
+                        return _c(
+                          "option",
+                          {
+                            key: customer.id,
+                            domProps: { value: customer.id }
+                          },
+                          [_vm._v(_vm._s(customer.name))]
+                        )
+                      }),
+                      0
+                    ),
+                    _vm._v(" "),
+                    _c("label", [_vm._v("Pay")]),
+                    _vm._v(" "),
+                    _c("input", {
+                      directives: [
+                        {
+                          name: "model",
+                          rawName: "v-model",
+                          value: _vm.pay,
+                          expression: "pay"
+                        }
+                      ],
+                      staticClass: "form-control",
+                      attrs: { type: "text", required: "" },
+                      domProps: { value: _vm.pay },
+                      on: {
+                        input: function($event) {
+                          if ($event.target.composing) {
+                            return
+                          }
+                          _vm.pay = $event.target.value
+                        }
+                      }
+                    }),
+                    _vm._v(" "),
+                    _c("label", [_vm._v("Due")]),
+                    _vm._v(" "),
+                    _c("input", {
+                      directives: [
+                        {
+                          name: "model",
+                          rawName: "v-model",
+                          value: _vm.due,
+                          expression: "due"
+                        }
+                      ],
+                      staticClass: "form-control",
+                      attrs: { type: "text", required: "" },
+                      domProps: { value: _vm.due },
+                      on: {
+                        input: function($event) {
+                          if ($event.target.composing) {
+                            return
+                          }
+                          _vm.due = $event.target.value
+                        }
+                      }
+                    }),
+                    _vm._v(" "),
+                    _c("label", [_vm._v("Pay By")]),
+                    _vm._v(" "),
+                    _c(
+                      "select",
+                      {
+                        directives: [
+                          {
+                            name: "model",
+                            rawName: "v-model",
+                            value: _vm.payby,
+                            expression: "payby"
+                          }
+                        ],
+                        staticClass: "form-control",
+                        on: {
+                          change: function($event) {
+                            var $$selectedVal = Array.prototype.filter
+                              .call($event.target.options, function(o) {
+                                return o.selected
+                              })
+                              .map(function(o) {
+                                var val = "_value" in o ? o._value : o.value
+                                return val
+                              })
+                            _vm.payby = $event.target.multiple
+                              ? $$selectedVal
+                              : $$selectedVal[0]
+                          }
+                        }
+                      },
+                      [
+                        _c("option", { attrs: { value: "HandCash" } }, [
+                          _vm._v("Hand Cash")
+                        ]),
+                        _vm._v(" "),
+                        _c("option", { attrs: { value: "Cheque" } }, [
+                          _vm._v("Cheque")
+                        ]),
+                        _vm._v(" "),
+                        _c("option", { attrs: { value: "GiftCard" } }, [
+                          _vm._v("Gift Card")
+                        ])
+                      ]
+                    ),
+                    _vm._v(" "),
+                    _c("br"),
+                    _vm._v(" "),
+                    _c(
+                      "button",
+                      {
+                        staticClass: "btn btn-success",
+                        attrs: { type: "submit" }
+                      },
+                      [_vm._v("Submit")]
+                    )
+                  ]
+                )
               ])
             ])
           ]),
           _vm._v(" "),
           _c("div", { staticClass: "col-xl-7 col-lg-7" }, [
             _c("div", { staticClass: "card mb-4" }, [
-              _vm._m(3),
+              _vm._m(2),
               _vm._v(" "),
               _c(
                 "ul",
@@ -56721,7 +56845,7 @@ var render = function() {
                   attrs: { id: "myTab", role: "tablist" }
                 },
                 [
-                  _vm._m(4),
+                  _vm._m(3),
                   _vm._v(" "),
                   _vm._l(_vm.categories, function(category) {
                     return _c(
@@ -57070,60 +57194,6 @@ var staticRenderFns = [
         _vm._v(" "),
         _c("th", [_vm._v("Action")])
       ])
-    ])
-  },
-  function() {
-    var _vm = this
-    var _h = _vm.$createElement
-    var _c = _vm._self._c || _h
-    return _c("ul", { staticClass: "list-group" }, [
-      _c(
-        "li",
-        {
-          staticClass:
-            "list-group-item d-flex justify-content-between align-items-center"
-        },
-        [
-          _vm._v("\n                            Total Quantity:"),
-          _c("strong", [_vm._v("56")])
-        ]
-      ),
-      _vm._v(" "),
-      _c(
-        "li",
-        {
-          staticClass:
-            "list-group-item d-flex justify-content-between align-items-center"
-        },
-        [
-          _vm._v("\n                            Sub Total:"),
-          _c("strong", [_vm._v("562 $")])
-        ]
-      ),
-      _vm._v(" "),
-      _c(
-        "li",
-        {
-          staticClass:
-            "list-group-item d-flex justify-content-between align-items-center"
-        },
-        [
-          _vm._v("\n                            Vat:"),
-          _c("strong", [_vm._v("56 %")])
-        ]
-      ),
-      _vm._v(" "),
-      _c(
-        "li",
-        {
-          staticClass:
-            "list-group-item d-flex justify-content-between align-items-center"
-        },
-        [
-          _vm._v("\n                            Total:"),
-          _c("strong", [_vm._v("5623 $")])
-        ]
-      )
     ])
   },
   function() {

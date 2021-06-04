@@ -52,24 +52,24 @@
                 <div class="card-footer">
                     <ul class="list-group">
                         <li class="list-group-item d-flex justify-content-between align-items-center">
-                            Total Quantity:<strong>56</strong>
+                            Total Quantity:<strong>{{ qty }}</strong>
                         </li>
                         <li class="list-group-item d-flex justify-content-between align-items-center">
-                            Sub Total:<strong>562 $</strong>
+                            Sub Total:<strong>{{ subtotal }} $</strong>
                         </li>
                         <li class="list-group-item d-flex justify-content-between align-items-center">
-                            Vat:<strong>56 %</strong>
+                            Vat:<strong>{{ vats.vat }} %</strong>
                         </li>
                         <li class="list-group-item d-flex justify-content-between align-items-center">
-                            Total:<strong>5623 $</strong>
+                            Total:<strong>{{ subtotal * vats.vat / 100 + subtotal }} $</strong>
                         </li>
                        
                     </ul>
                     <br>
-                    <form>
+                    <form @submit.prevent="orderdone">
                         <label>Customer Name</label>
                         <select class="form-control" v-model="customer_id">
-                            <option v-for="customer in customers" :key="customer.id">{{ customer.name }}</option>
+                            <option v-for="customer in customers" :key="customer.id" :value="customer.id">{{ customer.name }}</option>
                         </select>
                         <label>Pay</label>
                         <input type="text" class="form-control" required="" v-model="pay">
@@ -78,7 +78,7 @@
                         <input type="text" class="form-control" required="" v-model="due">
 
                         <label>Pay By</label>
-                        <select class="form-control" v-model="customer_id">
+                        <select class="form-control" v-model="payby">
                             <option value="HandCash">Hand Cash</option>
                             <option value="Cheque">Cheque</option>
                             <option value="GiftCard">Gift Card</option>
@@ -179,12 +179,18 @@
         this.allCategory();
         this.allCustomer();
         this.cartProduct();
+        this.vat();
         Reload.$on('AfterAdd', () => {
             this.cartProduct();
         })
     },
     data() {
       return{
+        customer_id:'',
+        pay:'',
+        due:'',
+        payby:'',
+
         products:[],
         categories:[],
         getproducts:[],
@@ -192,7 +198,8 @@
         getsearchTerm: '',
         customers:[],
         errors:'',
-        carts:[]
+        carts:[],
+        vats:''
 
       }
     },
@@ -206,6 +213,20 @@
         return this.getproducts.filter(getproduct => {
           return getproduct.product_name.match(this.getsearchTerm)
         })
+      },
+      qty(){
+        let sum = 0;
+        for(let i = 0; i < this.carts.length; i++ ){
+          sum += (parseFloat(this.carts[i].pro_quantity));
+        }
+        return sum;
+      },
+      subtotal(){
+        let sum = 0;
+        for(let i = 0; i < this.carts.length; i++ ){
+          sum += (parseFloat(this.carts[i].pro_quantity) * parseFloat(this.carts[i].product_price));
+        }
+        return sum;
       },
     },
     
@@ -247,6 +268,22 @@
                 Notification.success()
             })
             .catch()
+      },
+      vat(){
+        axios.get('/api/vats/')
+        .then(({data}) => (this.vats = data))
+        .catch()
+      },
+      orderdone(){
+        let total = this.subtotal * this.vats.vat / 100 + this.subtotal;
+        var data = {qty:this.qty, subtotal:this.subtotal, customer_id:this.customer_id, 
+                    payby:this.payby, pay:this.pay, due:this.due, vat:this.vats.vat, total:total}
+        
+        axios.post('/api/orderdone',data).then(() => {
+            Notification.success()
+            this.$router.push({name: 'home'})
+          })
+
       },
       // End Cart Methods
       allProduct(){

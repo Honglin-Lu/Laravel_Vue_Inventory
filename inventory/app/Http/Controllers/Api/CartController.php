@@ -58,4 +58,9 @@ class CartController extends Controller
         return response('Done');
     }
 
+    public function Vats(){
+        $vat = DB::table('extra')->first();
+        return response()->json($vat);
+    }
+
 }
