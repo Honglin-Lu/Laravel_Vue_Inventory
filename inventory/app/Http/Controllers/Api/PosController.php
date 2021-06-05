@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use DB;
+use DateTime;
 
 class PosController extends Controller
 {
@@ -19,7 +20,7 @@ class PosController extends Controller
         $validatedData = $request->validate([
             'customer_id' => 'required',
             'payby' => 'required',
-        ]),
+        ]);
 
         $data = array();
         $data['customer_id'] = $request->customer_id;
@@ -40,16 +41,36 @@ class PosController extends Controller
         $odata = array();
         foreach($contents as $content){
             $odata['order_id'] = $order_id;
-            $odata['product_id'] = $contents->pro_id;
-            $odata['pro_quantity'] = $contents->pro_quantity;
-            $odata['product_price'] = $contents->product_price;
-            $odata['sub_total'] =  $contents->sub_total;
+            $odata['product_id'] = $content->pro_id;
+            $odata['pro_quantity'] = $content->pro_quantity;
+            $odata['product_price'] = $content->product_price;
+            $odata['sub_total'] =  $content->sub_total;
             DB::table('order_details')->insert($odata);
 
 
                 DB::table('products')
-                    ->where('id', $contents->pro_id)
-                    ->update(['product_quantity' => DB:raw('product_quantity -'.$contents->pro_quantity)]);
+                    ->where('id', $content->pro_id)
+                    ->update(['product_quantity' => DB::raw('product_quantity -'.$content->pro_quantity)]);
         }
+
+        DB::table('pos')->delete();
+        return response('Done');
+    }
+
+    public function SearchOrderDate(Request $request){
+        $orderdate = $request->date;
+        $newdate = new DateTime($orderdate);
+        $done = $newdate->format('d/m/Y');
+
+        $order = DB::table('orders')
+                 ->join('customers', 'orders.customer_id','customers.id')
+                 ->select('customers.name','orders.*')
+                 ->where('orders.order_date', $done)
+                 ->get();
+        return response()->json($order);
+    }
+
+    public function TodaySell(){
+        
     }
 }
